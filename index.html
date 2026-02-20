@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오늘 나랑 데이트할래?</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: #e8e8e8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow: hidden;
+  }
+
+  .card {
+    position: relative;
+    border-radius: 28px;
+    width: 340px;
+    height: 480px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    animation: cardIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  @keyframes cardIn {
+    from { opacity:0; transform: translateY(20px) scale(0.97); }
+    to   { opacity:1; transform: translateY(0) scale(1); }
+  }
+
+  .card-bg {
+    position: absolute;
+    inset: 0;
+    background-color: #c9c9c9;
+    background-image: url('pxfuel.jpg');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.72);
+    transform: scale(1.05);
+  }
+
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.08) 0%,
+      rgba(0,0,0,0.0) 35%,
+      rgba(0,0,0,0.55) 100%
+    );
+  }
+
+  .card-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 32px 40px;
+    text-align: center;
+  }
+
+  .emoji-big {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    animation: nudge 3s ease-in-out infinite;
+  }
+  @keyframes nudge {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-5px); }
+  }
+
+  h1 {
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.45;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.3);
+  }
+
+  .sub {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 28px;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .btn-yes {
+    flex: 1;
+    padding: 14px 0;
+    border-radius: 12px;
+    border: none;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    background: rgba(255,255,255,0.95);
+    color: #111;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .btn-yes:hover {
+    background: #fff;
+    transform: translateY(-1px);
+  }
+
+  .btn-placeholder {
+    flex: 1;
+    height: 48px;
+    visibility: hidden;
+  }
+
+  #noBtn {
+    position: fixed;
+    z-index: 999;
+    border-radius: 12px;
+    border: none;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    background: #ffffff;
+    color: #333;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+    /* transition을 CSS에 짧게 고정 — JS에서 건드리지 않음 */
+    transition: left 0.1s ease-out, top 0.1s ease-out;
+  }
+
+  .success-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .success-screen.show { display: flex; }
+  .success-screen h1 { margin-bottom: 0; }
+  .success-screen p {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.65);
+    font-weight: 400;
+  }
+
+  .no-counter {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.78rem;
+    color: #888;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: opacity 0.3s;
+    z-index: 20;
+  }
+
+  .floating-heart {
+    position: fixed;
+    pointer-events: none;
+    font-size: 1.2rem;
+    z-index: 100;
+    animation: floatHeart 1.4s ease-out forwards;
+  }
+  @keyframes floatHeart {
+    0%   { opacity:1; transform:translateY(0) scale(1); }
+    100% { opacity:0; transform:translateY(-100px) scale(1.3); }
+  }
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="card-bg"></div>
+  <div class="card-overlay"></div>
+  <div class="card-content">
+    <div id="questionScreen" style="display:flex; flex-direction:column; align-items:center; width:100%;">
+      <div class="emoji-big">🥺</div>
+      <h1>오늘 나랑<br>데이트할래?</h1>
+      <p class="sub">신중하게 생각해봐</p>
+      <div class="btn-group">
+        <button class="btn-yes" onclick="accept()">좋아</button>
+        <div class="btn-placeholder" id="btnPlaceholder"></div>
+      </div>
+    </div>
+    <div class="success-screen" id="successScreen">
+      <div style="font-size:3.5rem;">🎉</div>
+      <h1>알고 있었어</h1>
+      <p>오늘 데이트 기대할게</p>
+    </div>
+  </div>
+</div>
+
+<button id="noBtn">싫어</button>
+<div class="no-counter" id="counter"></div>
+
+<script>
+  const noBtn       = document.getElementById('noBtn');
+  const counter     = document.getElementById('counter');
+  const placeholder = document.getElementById('btnPlaceholder');
+
+  let btnLeft = 0, btnTop = 0;
+  let btnW = 0, btnH = 0;
+  let escapeCount = 0;
+  let gone        = false;
+  let initialized = false;
+
+  const CORNER_PAD = 80;
+  const EDGE_PAD   = 20;
+  // 커서가 이 거리 안에 들어오면 즉시 도망
+  const TRIGGER    = 130;
+
+  function initNoBtn() {
+    const r = placeholder.getBoundingClientRect();
+    btnLeft = r.left;
+    btnTop  = r.top;
+    btnW    = r.width;
+    btnH    = r.height;
+    // 초기 배치는 transition 없이 즉시
+    noBtn.style.transition = 'none';
+    noBtn.style.left   = btnLeft + 'px';
+    noBtn.style.top    = btnTop  + 'px';
+    noBtn.style.width  = btnW    + 'px';
+    noBtn.style.height = btnH    + 'px';
+    // reflow 후 transition 복원
+    noBtn.getBoundingClientRect();
+    noBtn.style.transition = '';
+    initialized = true;
+  }
+
+  window.addEventListener('load', () => setTimeout(initNoBtn, 560));
+  window.addEventListener('resize', initNoBtn);
+
+  document.addEventListener('mousemove', e => dodge(e.clientX, e.clientY));
+  document.addEventListener('touchmove', e => {
+    e.preventDefault();
+    dodge(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: false });
+
+  function dodge(cx, cy) {
+    if (gone || !initialized) return;
+
+    const halfW = btnW / 2;
+    const halfH = btnH / 2;
+    // 현재 버튼 중심 (저장된 left/top 기준)
+    const btnCx = btnLeft + halfW;
+    const btnCy = btnTop  + halfH;
+    const dx = cx - btnCx;
+    const dy = cy - btnCy;
+
+    if (Math.hypot(dx, dy) > TRIGGER) return;
+
+    escapeCount++;
+    updateCounter();
+
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+
+    const minX = EDGE_PAD + halfW;
+    const maxX = W - EDGE_PAD - halfW;
+    const minY = EDGE_PAD + halfH;
+    const maxY = H - EDGE_PAD - halfH;
+
+    // 커서 반대 방향으로 이동
+    const angle = Math.atan2(dy, dx);
+    const step  = 180 + Math.random() * 80;
+    let newCx = btnCx - Math.cos(angle) * step;
+    let newCy = btnCy - Math.sin(angle) * step;
+
+    // 경계 클램프
+    newCx = Math.max(minX, Math.min(maxX, newCx));
+    newCy = Math.max(minY, Math.min(maxY, newCy));
+
+    // 모서리 회피
+    const safe = avoidCorners(newCx, newCy, W, H, halfW, halfH, minX, maxX, minY, maxY);
+    newCx = safe.x;
+    newCy = safe.y;
+
+    // 클램프 후에도 커서와 너무 가까우면 화면 반대편으로 점프
+    if (Math.hypot(cx - newCx, cy - newCy) < 80) {
+      newCx = cx < W / 2 ? maxX - Math.random() * 100 : minX + Math.random() * 100;
+      newCy = cy < H / 2 ? maxY - Math.random() * 80  : minY + Math.random() * 80;
+    }
+
+    btnLeft = newCx - halfW;
+    btnTop  = newCy - halfH;
+    noBtn.style.left = btnLeft + 'px';
+    noBtn.style.top  = btnTop  + 'px';
+  }
+
+  function avoidCorners(x, y, W, H, halfW, halfH, minX, maxX, minY, maxY) {
+    const corners = [{cx:0,cy:0},{cx:W,cy:0},{cx:0,cy:H},{cx:W,cy:H}];
+    for (const c of corners) {
+      const dist  = Math.hypot(x - c.cx, y - c.cy);
+      const limit = CORNER_PAD + halfW + halfH;
+      if (dist < limit) {
+        const a    = Math.atan2(H/2 - c.cy, W/2 - c.cx);
+        const push = limit - dist + 20;
+        x += Math.cos(a) * push;
+        y += Math.sin(a) * push;
+        x = Math.max(minX, Math.min(maxX, x));
+        y = Math.max(minY, Math.min(maxY, y));
+      }
+    }
+    return { x, y };
+  }
+
+  const messages = [
+    '버튼이 도망가고 있어요 👀',
+    '잡을 수가 없어요 ㅋㅋ',
+    '이 버튼 왜 이래요',
+    '개발자가 만든 것 같아요',
+    '싫어 버튼은 존재하지 않습니다',
+    '그냥 좋아 눌러',
+  ];
+  function updateCounter() {
+    if (escapeCount < 2) return;
+    counter.textContent = messages[Math.min(Math.floor(escapeCount / 3), messages.length - 1)];
+  }
+
+  function accept() {
+    gone = true;
+    noBtn.style.display = 'none';
+    document.getElementById('questionScreen').style.display = 'none';
+    document.getElementById('successScreen').classList.add('show');
+    counter.style.opacity = '0';
+    const emojis = ['🎉','✨','💫','🫶','😊'];
+    for (let i = 0; i < 16; i++) {
+      setTimeout(() => {
+        const h = document.createElement('div');
+        h.className   = 'floating-heart';
+        h.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        h.style.left  = (10 + Math.random() * 80) + '%';
+        h.style.top   = (20 + Math.random() * 55) + '%';
+        document.body.appendChild(h);
+        setTimeout(() => h.remove(), 1400);
+      }, i * 65);
+    }
+  }
+</script>
+</body>
+</html>
